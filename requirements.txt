@@ -1,0 +1,9 @@
+wtforms
+flask-wtf
+werkzeug
+flask-login
+python-dotenv
+sqlalchemy
+flask-sqlalchemy
+flask-migrate
+flask

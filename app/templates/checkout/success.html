@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Solicitud registrada{% endblock %}
+
+{% block content %}
+  <h2>Solicitud registrada</h2>
+
+  <p>Registramos tu solicitud para el evento:</p>
+
+  <p>
+    <strong>{{ purchase.event.title }}</strong><br>
+    Total: <strong>${{ purchase.total_amount }}</strong><br>
+    Estado: {{ purchase.status }}
+  </p>
+
+  <h3>Comprador</h3>
+  <p>
+    {{ purchase.buyer_name }}<br>
+    {{ purchase.buyer_email }}<br>
+    {{ purchase.buyer_phone }}
+  </p>
+
+  <h3>Participantes ({{ purchase.participants|length }})</h3>
+
+  {% if purchase.participants %}
+    <div style="display: grid; gap: 0.75rem;">
+      {% for p in purchase.participants %}
+        <div style="border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem;">
+          <strong>Participante #{{ loop.index }}</strong><br>
+          Nombre: {{ p.name }}<br>
+          Edad: {{ p.age }}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No se registraron participantes.</p>
+  {% endif %}
+
+  <p style="margin-top: 1rem;">
+    En el siguiente paso integraremos el pago.
+  </p>
+
+  <p><a href="{{ url_for('public.home') }}">Volver al inicio</a></p>
+{% endblock %}

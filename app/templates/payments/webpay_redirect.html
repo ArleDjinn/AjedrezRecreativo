@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Redirigiendo a pago…{% endblock %}
+
+{% block content %}
+  <h2>Redirigiendo a Webpay…</h2>
+  <p>En segundos verás el formulario de pago.</p>
+
+  <form id="tbk-form" action="{{ url }}" method="POST">
+    <input type="hidden" name="token_ws" value="{{ token }}">
+    <noscript>
+      <button type="submit">Ir a pagar</button>
+    </noscript>
+  </form>
+
+  <script>
+    document.getElementById("tbk-form").submit();
+  </script>
+{% endblock %}

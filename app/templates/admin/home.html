@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% block title %}Panel Admin{% endblock %}
+
+{% block content %}
+  <h2>Panel de Administración</h2>
+
+  <p>Sesión activa: <strong>{{ current_user.email }}</strong></p>
+
+    <ul>
+        <li><a href="{{ url_for('admin.admin_home') }}">Inicio</a></li>
+        <li><a href="{{ url_for('admin.events_list') }}">Eventos</a></li>
+        <!-- después: eventos, compras -->
+    </ul>
+
+{% endblock %}

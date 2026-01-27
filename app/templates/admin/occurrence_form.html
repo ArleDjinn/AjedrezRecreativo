@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+{% block title %}Nueva sesión · Admin{% endblock %}
+
+{% block content %}
+  <p><a href="{{ url_for('admin.event_detail', event_id=event.id) }}">← Volver al evento</a></p>
+
+  <h2>Nueva sesión para: {{ event.title }}</h2>
+  <p><strong>Modo:</strong> {{ event.sales_mode }}</p>
+
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <label>Inicio</label>
+    {{ form.start_dt(type="datetime-local") }}
+
+    <label>Fin</label>
+    {{ form.end_dt(type="datetime-local") }}
+
+    <label>Cupo (solo si PICK_OCCURRENCES)</label>
+    {{ form.capacity() }}
+
+    {{ form.submit() }}
+  </form>
+{% endblock %}

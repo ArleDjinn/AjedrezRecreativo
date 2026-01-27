@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+{% block title %}Login · Admin{% endblock %}
+
+{% block content %}
+  <h2>Ingreso Administrador</h2>
+
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <label>Email</label>
+    {{ form.email() }}
+
+    <label>Password</label>
+    {{ form.password() }}
+
+    {{ form.submit() }}
+  </form>
+{% endblock %}

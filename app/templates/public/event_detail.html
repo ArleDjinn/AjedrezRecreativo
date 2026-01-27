@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} – Ajedrez Recreativo{% endblock %}
+
+{% block content %}
+  <h2>{{ event.title }}</h2>
+
+  <p><strong>Lugar:</strong> {{ event.location_name }}</p>
+  <p><strong>Cupos:</strong> {{ event.capacity }}</p>
+
+    <h3>Fechas incluidas</h3>
+    {% if occurrences %}
+      <ul>
+        {% for occ in occurrences %}
+          <li>
+            {{ occ.start_dt.strftime("%d-%m-%Y") }}
+            ·
+            {{ occ.start_dt.strftime("%H:%M") }}
+            –
+            {{ occ.end_dt.strftime("%H:%M") }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Fechas por confirmar.</p>
+    {% endif %}
+
+
+  <h3>Precio</h3>
+  {% if event.price_type == "FIXED_PACKAGE" %}
+    <p><strong>${{ event.package_price }}</strong></p>
+  {% else %}
+    <p><strong>${{ event.price_per_occurrence * (event.occurrences|length) }}</strong> (pack)</p>
+  {% endif %}
+
+  <p>
+    <a href="{{ url_for('checkout.checkout_event', event_id=event.id) }}">
+        Inscripción
+    </a>
+  </p>
+{% endblock %}

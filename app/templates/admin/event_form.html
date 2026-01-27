@@ -1,0 +1,54 @@
+{% extends "admin/base.html" %}
+{% block title %}
+  {% if mode == 'new' %}Nuevo evento{% else %}Editar evento{% endif %}
+{% endblock %}
+
+{% block content %}
+  <h2>
+    {% if mode == 'new' %}
+      Nuevo evento
+    {% else %}
+      Editar evento #{{ event.id }}
+    {% endif %}
+  </h2>
+
+  <form method="post">
+    {{ form.hidden_tag() }}
+
+    <label>Título</label>
+    {{ form.title() }}
+
+    <label>Categoría</label>
+    {{ form.category() }}
+
+    <label>Modo de cobro</label>
+    {{ form.pricing_mode() }}
+
+    <label>
+      Precio (CLP)
+      <small>
+        {% if form.pricing_mode.data == "PER_OCCURRENCE" %}
+          (por sesión)
+        {% else %}
+          (paquete completo)
+        {% endif %}
+      </small>
+    </label>
+    {{ form.price() }}
+
+    <label>Cupo del evento (solo PACKAGE)</label>
+    {{ form.capacity() }}
+
+    <label>Lugar</label>
+    {{ form.location_name() }}
+
+    <label>Estado</label>
+    {{ form.status() }}
+
+    {{ form.submit() }}
+  </form>
+
+  <p>
+    <a href="{{ url_for('admin.events_list') }}">← Volver a eventos</a>
+  </p>
+{% endblock %}

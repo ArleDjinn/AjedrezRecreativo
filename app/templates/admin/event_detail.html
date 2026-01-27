@@ -1,0 +1,73 @@
+{% extends "admin/base.html" %}
+{% block title %}Evento #{{ event.id }} · Admin{% endblock %}
+
+{% block content %}
+  <p><a href="{{ url_for('admin.events_list') }}">← Eventos</a></p>
+
+  <h2>{{ event.title }}</h2>
+
+  <p>
+    <strong>Estado:</strong> {{ event.status }} |
+    <strong>Modo:</strong> {{ event.sales_mode }} |
+    <strong>Precio:</strong> {{ event.price_type }}
+  </p>
+
+  <p>
+    <strong>Cupo evento:</strong> {{ event.capacity }} |
+    <strong>Participantes pagados:</strong> {{ paid_participants }} |
+    <strong>Disponibles:</strong> {{ remaining_event }}
+  </p>
+
+  <p>
+    <a href="{{ url_for('admin.events_edit', event_id=event.id) }}">Editar evento</a>
+    ·
+    <a href="{{ url_for('admin.occurrence_new', event_id=event.id) }}">+ Agregar sesión</a>
+  </p>
+
+  <h3>Sesiones</h3>
+
+  {% if occ_stats %}
+    <table border="1" cellpadding="8" cellspacing="0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Inicio</th>
+          <th>Fin</th>
+          <th>Estado</th>
+          {% if event.sales_mode == "PICK_OCCURRENCES" %}
+            <th>Cupo</th>
+            <th>Pagados</th>
+            <th>Disponibles</th>
+          {% endif %}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for oc, cap, paid, rem in occ_stats %}
+          <tr>
+            <td>{{ oc.id }}</td>
+            <td>{{ oc.start_dt }}</td>
+            <td>{{ oc.end_dt }}</td>
+            <td>{{ oc.status }}</td>
+
+            {% if event.sales_mode == "PICK_OCCURRENCES" %}
+              <td>{{ cap }}</td>
+              <td>{{ paid }}</td>
+              <td>{{ rem }}</td>
+            {% endif %}
+
+            <td>
+              {% if oc.status != "cancelled" %}
+                <form method="post" action="{{ url_for('admin.occurrence_cancel', occurrence_id=oc.id) }}">
+                  <button type="submit">Cancelar</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No hay sesiones aún.</p>
+  {% endif %}
+{% endblock %}
