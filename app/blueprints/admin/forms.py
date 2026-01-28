@@ -13,7 +13,7 @@ class LoginForm(FlaskForm):
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange
+from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 class EventForm(FlaskForm):
     title = StringField("Título", validators=[DataRequired(), Length(max=120)])
@@ -28,7 +28,7 @@ class EventForm(FlaskForm):
         validators=[DataRequired()],
     )
     price = IntegerField("Precio (CLP)", validators=[DataRequired(), NumberRange(min=0)])
-    capacity = IntegerField("Cupo del evento (PACKAGE)", validators=[DataRequired(), NumberRange(min=1, max=9999)])
+    capacity = IntegerField("Cupo del evento (PACKAGE)", validators=[Optional(), NumberRange(min=1, max=9999)])
     location_name = StringField("Lugar", validators=[DataRequired(), Length(max=120)])
     status = SelectField(
         "Estado",
@@ -42,10 +42,9 @@ class EventForm(FlaskForm):
         if not rv:
             return False
 
-        if self.pricing_mode.data == "PER_OCCURRENCE" and self.capacity.data:
-            # no es error fatal, pero conceptualmente no se usa
+        if self.pricing_mode.data == "PACKAGE" and not self.capacity.data:
             self.capacity.errors.append(
-                "El cupo del evento no se utiliza en eventos por sesión."
+                "El cupo del evento es obligatorio cuando el evento es de tipo paquete."
             )
             return False
 
@@ -56,7 +55,7 @@ class OccurrenceForm(FlaskForm):
     start_dt = DateTimeLocalField("Inicio", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     end_dt = DateTimeLocalField("Fin", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
 
-    capacity = IntegerField("Cupo (solo si PICK_OCCURRENCES)", validators=[Optional(), NumberRange(min=1, max=9999)])
+    capacity = IntegerField("Cupo (solo si PER_OCCURRENCE)", validators=[Optional(), NumberRange(min=1, max=9999)])
 
     submit = SubmitField("Guardar")
 

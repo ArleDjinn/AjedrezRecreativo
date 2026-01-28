@@ -10,7 +10,7 @@ class Occurrence(db.Model):
     start_dt = db.Column(db.DateTime, nullable=False)
     end_dt = db.Column(db.DateTime, nullable=False)
 
-    # NUEVO: cupo por occurrence (solo lo usas si sales_mode == PICK_OCCURRENCES)
+    # cupo por occurrence (solo lo usas si pricing_mode == PER_OCCURRENCE)
     capacity = db.Column(db.Integer, nullable=True)
 
     status = db.Column(db.String(20), nullable=False, default="scheduled")

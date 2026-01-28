@@ -22,8 +22,8 @@
         <tr>
           <td>{{ e.id }}</td>
           <td><a href="{{ url_for('admin.event_detail', event_id=e.id) }}">{{ e.title }}</a></td>
-          <td>{{ e.sales_mode }}</td>
-          <td>{{ e.price_type }}</td>
+          <td>{{ e.pricing_mode }}</td>
+          <td>${{ e.price }}</td>
           <td>{{ e.status }}</td>
           <td><a href="{{ url_for('admin.events_edit', event_id=e.id) }}">Editar</a></td>
         </tr>
