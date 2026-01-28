@@ -5,7 +5,7 @@
   <p><a href="{{ url_for('admin.event_detail', event_id=event.id) }}">← Volver al evento</a></p>
 
   <h2>Nueva sesión para: {{ event.title }}</h2>
-  <p><strong>Modo:</strong> {{ event.sales_mode }}</p>
+  <p><strong>Modo:</strong> {{ event.pricing_mode }}</p>
 
   <form method="post">
     {{ form.hidden_tag() }}
@@ -16,7 +16,7 @@
     <label>Fin</label>
     {{ form.end_dt(type="datetime-local") }}
 
-    <label>Cupo (solo si PICK_OCCURRENCES)</label>
+    <label>Cupo (solo si PER_OCCURRENCE)</label>
     {{ form.capacity() }}
 
     {{ form.submit() }}

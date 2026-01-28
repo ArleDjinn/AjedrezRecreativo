@@ -55,12 +55,13 @@ def events_list():
 def events_new():
     form = EventForm()
     if form.validate_on_submit():
+        capacity_value = form.capacity.data if form.pricing_mode.data == "PACKAGE" else None
         ev = Event(
             title=form.title.data.strip(),
             category=form.category.data,
             pricing_mode=form.pricing_mode.data,
             price=form.price.data,
-            capacity=form.capacity.data,
+            capacity=capacity_value,
             location_name=form.location_name.data.strip(),
             status=form.status.data,
         )
@@ -79,11 +80,9 @@ def events_edit(event_id):
     if form.validate_on_submit():
         ev.title = form.title.data.strip()
         ev.category = form.category.data
-        ev.sales_mode = form.sales_mode.data
-        ev.price_type = form.price_type.data
-        ev.price_per_occurrence = form.price_per_occurrence.data
-        ev.package_price = form.package_price.data
-        ev.capacity = form.capacity.data
+        ev.pricing_mode = form.pricing_mode.data
+        ev.price = form.price.data
+        ev.capacity = form.capacity.data if form.pricing_mode.data == "PACKAGE" else None
         ev.location_name = form.location_name.data.strip()
         ev.status = form.status.data
 
@@ -118,14 +117,16 @@ def event_detail(event_id):
     ev = Event.query.get_or_404(event_id)
 
     paid_participants = _paid_participants_count_for_event(ev.id)
-    remaining_event = max(ev.capacity - paid_participants, 0)
+    remaining_event = None
+    if ev.capacity is not None:
+        remaining_event = max(ev.capacity - paid_participants, 0)
 
     # occurrences ordenadas (ya lo defines en relationship)
     occs = ev.occurrences
 
     occ_stats = []
     for oc in occs:
-        if ev.sales_mode == "PICK_OCCURRENCES":
+        if ev.pricing_mode == "PER_OCCURRENCE":
             oc_capacity = oc.capacity or 0
             oc_paid = _paid_participants_count_for_occurrence(oc.id)
             oc_remaining = max(oc_capacity - oc_paid, 0)

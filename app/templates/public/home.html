@@ -28,10 +28,10 @@
 
           <p>
             <strong>Precio:</strong>
-            {% if event.price_type == "FIXED_PACKAGE" %}
-              ${{ event.package_price }}
+            {% if event.pricing_mode == "PACKAGE" %}
+              ${{ event.price }}
             {% else %}
-              ${{ event.price_per_occurrence * (event.occurrences | length) }}
+              ${{ event.price * (event.occurrences | length) }}
             {% endif %}
           </p>
 

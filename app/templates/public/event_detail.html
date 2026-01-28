@@ -6,7 +6,7 @@
   <h2>{{ event.title }}</h2>
 
   <p><strong>Lugar:</strong> {{ event.location_name }}</p>
-  <p><strong>Cupos:</strong> {{ event.capacity }}</p>
+  <p><strong>Cupos:</strong> {{ event.capacity if event.capacity is not none else "—" }}</p>
 
     <h3>Fechas incluidas</h3>
     {% if occurrences %}
@@ -27,10 +27,10 @@
 
 
   <h3>Precio</h3>
-  {% if event.price_type == "FIXED_PACKAGE" %}
-    <p><strong>${{ event.package_price }}</strong></p>
+  {% if event.pricing_mode == "PACKAGE" %}
+    <p><strong>${{ event.price }}</strong></p>
   {% else %}
-    <p><strong>${{ event.price_per_occurrence * (event.occurrences|length) }}</strong> (pack)</p>
+    <p><strong>${{ event.price * (event.occurrences|length) }}</strong> (pack)</p>
   {% endif %}
 
   <p>

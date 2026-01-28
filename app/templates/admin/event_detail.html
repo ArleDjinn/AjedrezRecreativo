@@ -8,14 +8,14 @@
 
   <p>
     <strong>Estado:</strong> {{ event.status }} |
-    <strong>Modo:</strong> {{ event.sales_mode }} |
-    <strong>Precio:</strong> {{ event.price_type }}
+    <strong>Modo:</strong> {{ event.pricing_mode }} |
+    <strong>Precio:</strong> ${{ event.price }}
   </p>
 
   <p>
-    <strong>Cupo evento:</strong> {{ event.capacity }} |
+    <strong>Cupo evento:</strong> {{ event.capacity if event.capacity is not none else "—" }} |
     <strong>Participantes pagados:</strong> {{ paid_participants }} |
-    <strong>Disponibles:</strong> {{ remaining_event }}
+    <strong>Disponibles:</strong> {{ remaining_event if remaining_event is not none else "—" }}
   </p>
 
   <p>
@@ -34,7 +34,7 @@
           <th>Inicio</th>
           <th>Fin</th>
           <th>Estado</th>
-          {% if event.sales_mode == "PICK_OCCURRENCES" %}
+          {% if event.pricing_mode == "PER_OCCURRENCE" %}
             <th>Cupo</th>
             <th>Pagados</th>
             <th>Disponibles</th>
@@ -50,7 +50,7 @@
             <td>{{ oc.end_dt }}</td>
             <td>{{ oc.status }}</td>
 
-            {% if event.sales_mode == "PICK_OCCURRENCES" %}
+            {% if event.pricing_mode == "PER_OCCURRENCE" %}
               <td>{{ cap }}</td>
               <td>{{ paid }}</td>
               <td>{{ rem }}</td>

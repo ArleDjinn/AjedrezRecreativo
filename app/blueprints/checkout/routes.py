@@ -5,6 +5,8 @@ from app.models import Event, Purchase, PurchaseParticipant
 from datetime import datetime, timedelta, timezone
 
 def remaining_capacity(event) -> int:
+    if event.capacity is None:
+        return 0
     used = (
         db.session.query(PurchaseParticipant)
         .join(Purchase, PurchaseParticipant.purchase_id == Purchase.id)
@@ -34,10 +36,10 @@ checkout_bp = Blueprint("checkout", __name__)
 def compute_total_price(event: Event) -> int:
     occurrences = sorted(event.occurrences, key=lambda o: o.start_dt)
 
-    if event.price_type == "FIXED_PACKAGE":
-        return int(event.package_price or 0)
+    if event.pricing_mode == "PACKAGE":
+        return int(event.price or 0)
 
-    return int((event.price_per_occurrence or 0) * len(occurrences))
+    return int((event.price or 0) * len(occurrences))
 
 @checkout_bp.get("/event/<int:event_id>")
 def checkout_event(event_id: int):
@@ -45,7 +47,7 @@ def checkout_event(event_id: int):
 
     if event is None or event.status != "published":
         abort(404)
-    if event.sales_mode != "ALL_OCCURRENCES":
+    if event.pricing_mode != "PACKAGE":
         abort(400)
 
     occurrences = sorted(event.occurrences, key=lambda o: o.start_dt)
@@ -71,7 +73,7 @@ def checkout_event_post(event_id: int):
 
     if event is None or event.status != "published":
         abort(404)
-    if event.sales_mode != "ALL_OCCURRENCES":
+    if event.pricing_mode != "PACKAGE":
         abort(400)
 
     # 1) Expira pending antiguos y recalcula cupos reales

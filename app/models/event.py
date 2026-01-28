@@ -13,7 +13,7 @@ class Event(db.Model):
     # CLP. Si pricing_mode=PACKAGE => precio paquete. Si PER_OCCURRENCE => precio por sesión.
     price = db.Column(db.Integer, nullable=False)
 
-    capacity = db.Column(db.Integer, nullable=False, default=20)  # cupo global (PACKAGE)
+    capacity = db.Column(db.Integer, nullable=True, default=20)  # cupo global (PACKAGE)
     category = db.Column(db.String(20), nullable=False, default="class")
 
     location_name = db.Column(db.String(120), nullable=False, default="Casa de Sanger")
