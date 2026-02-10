@@ -3,51 +3,94 @@
 {% block title %}Inicio – Ajedrez Recreativo{% endblock %}
 
 {% block content %}
-  <div class="card">
-    <h2>Próximos eventos</h2>
-    <p>Inscripciones abiertas a eventos publicados.</p>
+  <div class="card hero">
+    <div class="eyebrow">Ajedrez Recreativo</div>
+    <h1>Entrena, juega y comparte en Temuco.</h1>
+    <p>
+      Torneos amistosos, clases y actividades abiertas para todas las edades.
+      Revisa los próximos eventos e inscríbete en minutos.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#eventos">Ver eventos</a>
+      <a class="btn" href="{{ url_for('public.home') }}">Calendario completo</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <small>Eventos activos</small>
+        <strong>{{ events|length }}</strong>
+      </div>
+      <div class="stat">
+        <small>Comunidad</small>
+        <strong>Temuco</strong>
+      </div>
+      <div class="stat">
+        <small>Modalidad</small>
+        <strong>Presencial</strong>
+      </div>
+    </div>
+  </div>
+
+  <div id="eventos" class="section-header">
+    <div class="section-title">
+      <div class="eyebrow">Agenda abierta</div>
+      <h2>Próximos eventos</h2>
+      <p>Inscripciones disponibles para actividades publicadas.</p>
+    </div>
   </div>
 
   {% if events %}
     {% for event in events %}
-      <div class="card">
+      <div class="card event-card">
         <div class="row">
           <div class="col">
+            <div class="eyebrow">Evento</div>
             <h2 style="margin-bottom:6px;">{{ event.title }}</h2>
-            <p>
-              <span class="badge">
+            <div class="actions" style="margin-bottom: 8px;">
+              <span class="pill">
                 {% if event.pricing_mode == "PACKAGE" %}
-                  Paquete
+                  Paquete completo
                 {% else %}
                   Por sesión
                 {% endif %}
               </span>
-              <span class="badge">{{ event.status }}</span>
-            </p>
-
-            <p><strong>Lugar:</strong> {{ event.location_name }}</p>
-
-            <p>
-              <strong>Sesiones:</strong>
-              {{ event.occurrences|length }}
-            </p>
-
-            <p>
-              <strong>Precio:</strong>
-              {% if event.pricing_mode == "PACKAGE" %}
-                ${{ event.price }} <small>(por participante)</small>
-              {% else %}
-                ${{ event.price }} <small>(por sesión, por participante)</small>
-              {% endif %}
-            </p>
+              <span class="pill">{{ event.status }}</span>
+            </div>
           </div>
 
-          <div class="col" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+          <div class="col" style="display:flex; align-items:flex-start; justify-content:flex-end;">
             <div class="actions">
               <a class="btn btn-primary" href="{{ url_for('public.event_detail', event_id=event.id) }}">
                 Ver detalle
               </a>
             </div>
+          </div>
+        </div>
+
+        <div class="event-meta">
+          <div class="meta-item">
+            <small>Lugar</small>
+            <strong>{{ event.location_name }}</strong>
+          </div>
+          <div class="meta-item">
+            <small>Sesiones</small>
+            <strong>{{ event.occurrences|length }}</strong>
+          </div>
+          <div class="meta-item">
+            <small>Precio</small>
+            <strong>
+              {% if event.pricing_mode == "PACKAGE" %}
+                ${{ event.price }}
+              {% else %}
+                ${{ event.price }}
+              {% endif %}
+            </strong>
+            <small>
+              {% if event.pricing_mode == "PACKAGE" %}
+                por participante
+              {% else %}
+                por sesión, por participante
+              {% endif %}
+            </small>
           </div>
         </div>
       </div>
