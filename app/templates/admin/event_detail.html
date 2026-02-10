@@ -9,13 +9,14 @@
   <p>
     <strong>Estado:</strong> {{ event.status }} |
     <strong>Modo:</strong> {{ event.pricing_mode }} |
-    <strong>Precio:</strong> ${{ event.price }}
+    <strong>Precio base:</strong> ${{ event.price }} |
+    <strong>Lugar:</strong> {{ event.location_name }}
   </p>
 
   <p>
-    <strong>Cupo evento:</strong> {{ event.capacity if event.capacity is not none else "—" }} |
-    <strong>Participantes pagados:</strong> {{ paid_participants }} |
-    <strong>Disponibles:</strong> {{ remaining_event if remaining_event is not none else "—" }}
+    <strong>Cupo por defecto:</strong> {{ event.capacity_default if event.capacity_default is not none else "—" }} |
+    <strong>Participantes pagados (evento):</strong> {{ paid_participants }} |
+    <strong>Disponibles (referencial):</strong> {{ remaining_event if remaining_event is not none else "—" }}
   </p>
 
   <p>
@@ -34,11 +35,10 @@
           <th>Inicio</th>
           <th>Fin</th>
           <th>Estado</th>
-          {% if event.pricing_mode == "PER_OCCURRENCE" %}
-            <th>Cupo</th>
-            <th>Pagados</th>
-            <th>Disponibles</th>
-          {% endif %}
+          <th>Cupo</th>
+          <th>Pagados</th>
+          <th>Disponibles</th>
+          <th>Precio</th>
           <th></th>
         </tr>
       </thead>
@@ -50,11 +50,17 @@
             <td>{{ oc.end_dt }}</td>
             <td>{{ oc.status }}</td>
 
-            {% if event.pricing_mode == "PER_OCCURRENCE" %}
-              <td>{{ cap }}</td>
-              <td>{{ paid }}</td>
-              <td>{{ rem }}</td>
-            {% endif %}
+            <td>{{ cap if cap is not none else "—" }}</td>
+            <td>{{ paid }}</td>
+            <td>{{ rem if rem is not none else "—" }}</td>
+
+            <td>
+              {% if oc.price_override is not none %}
+                ${{ oc.price_override }} <small>(override)</small>
+              {% else %}
+                ${{ event.price }} <small>(base)</small>
+              {% endif %}
+            </td>
 
             <td>
               {% if oc.status != "cancelled" %}

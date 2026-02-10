@@ -1,5 +1,6 @@
-from flask import Blueprint, current_app, render_template, request, abort, redirect, url_for
 from datetime import datetime, timezone
+
+from flask import Blueprint, current_app, render_template, request, abort, redirect, url_for
 
 from transbank.common.integration_type import IntegrationType
 from transbank.common.options import WebpayOptions
@@ -8,14 +9,39 @@ from transbank.webpay.webpay_plus.transaction import Transaction
 from app.extensions import db
 from app.models import Purchase
 
+
 payments_bp = Blueprint("payments", __name__, url_prefix="/pay")
 
 
 def _webpay_tx() -> Transaction:
-    # TEST: usa tus credenciales de integración (o las de Transbank si decides)
     commerce_code = current_app.config["WEBPAY_COMMERCE_CODE"]
     api_key = current_app.config["WEBPAY_API_KEY"]
-    return Transaction(WebpayOptions(commerce_code, api_key, IntegrationType.TEST))  # :contentReference[oaicite:4]{index=4}
+    return Transaction(WebpayOptions(commerce_code, api_key, IntegrationType.TEST))
+
+
+def _attach_package_occurrences_if_needed(purchase: Purchase) -> None:
+    """
+    Regla de negocio:
+    - Si el evento es PACKAGE, al pagar se inscribe a TODAS las sesiones scheduled.
+    - Si ya están asignadas, no hace nada (idempotente).
+    """
+    # Asegura relaciones cargadas
+    event = purchase.event
+    if event is None:
+        return
+
+    if event.pricing_mode != "PACKAGE":
+        return
+
+    # Si ya tiene occurrences asociadas, no duplicar trabajo
+    if purchase.occurrences and len(purchase.occurrences) > 0:
+        return
+
+    scheduled = [oc for oc in (event.occurrences or []) if oc.status == "scheduled"]
+    if not scheduled:
+        return
+
+    purchase.occurrences = scheduled
 
 
 @payments_bp.get("/webpay/start/<int:purchase_id>")
@@ -23,8 +49,8 @@ def webpay_start(purchase_id: int):
     purchase = Purchase.query.get(purchase_id)
     if purchase is None:
         abort(404)
+
     if purchase.status != "pending":
-        # si ya pagó o expiró, no tiene sentido reintentar acá
         return redirect(url_for("checkout.checkout_success", purchase_id=purchase.id))
 
     return_url = url_for("payments.webpay_return", _external=True)
@@ -33,9 +59,8 @@ def webpay_start(purchase_id: int):
     amount = int(purchase.total_amount)
 
     tx = _webpay_tx()
-    resp = tx.create(buy_order, session_id, amount, return_url)  # :contentReference[oaicite:5]{index=5}
+    resp = tx.create(buy_order, session_id, amount, return_url)
 
-    # resp trae: token + url (donde postear token_ws) :contentReference[oaicite:6]{index=6}
     purchase.tbk_token = resp["token"]
     purchase.buy_order = buy_order
     db.session.commit()
@@ -53,15 +78,22 @@ def webpay_return():
     if purchase is None:
         abort(404)
 
-    tx = _webpay_tx()
-    commit_resp = tx.commit(token)  # :contentReference[oaicite:7]{index=7}
+    # Si ya está resuelto, no vuelvas a commitear (idempotencia básica)
+    if purchase.status in ("paid", "failed", "expired", "cancelled"):
+        return redirect(url_for("checkout.checkout_success", purchase_id=purchase.id))
 
-    # En la respuesta viene el status (AUTHORIZED cuando aprueba)
+    tx = _webpay_tx()
+    commit_resp = tx.commit(token)
+
     status = (commit_resp.get("status") or "").upper()
 
     if status == "AUTHORIZED":
         purchase.status = "paid"
         purchase.paid_at = datetime.now(timezone.utc)
+
+        # ✅ Enlaza occurrences si es paquete
+        _attach_package_occurrences_if_needed(purchase)
+
     else:
         purchase.status = "failed"
 

@@ -17,33 +17,39 @@
 
     <label>Título</label>
     {{ form.title() }}
-
-    <label>Categoría</label>
-    {{ form.category() }}
+    {% for e in form.title.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     <label>Modo de cobro</label>
     {{ form.pricing_mode() }}
+    {% for e in form.pricing_mode.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     <label>
-      Precio (CLP)
+      Precio base (CLP)
       <small>
         {% if form.pricing_mode.data == "PER_OCCURRENCE" %}
-          (por sesión)
+          (por sesión; se puede sobreescribir por sesión)
         {% else %}
           (paquete completo)
         {% endif %}
       </small>
     </label>
     {{ form.price() }}
+    {% for e in form.price.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
-    <label>Cupo del evento (solo PACKAGE)</label>
-    {{ form.capacity() }}
+    <label>
+      Cupo por defecto
+      <small>(se aplica a cada sesión; puede tener override por sesión)</small>
+    </label>
+    {{ form.capacity_default() }}
+    {% for e in form.capacity_default.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     <label>Lugar</label>
     {{ form.location_name() }}
+    {% for e in form.location_name.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     <label>Estado</label>
     {{ form.status() }}
+    {% for e in form.status.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     {{ form.submit() }}
   </form>

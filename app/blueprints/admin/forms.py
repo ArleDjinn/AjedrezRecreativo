@@ -1,40 +1,44 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email, Length
+# app/blueprints/admin/forms.py
 
-from datetime import datetime
-from wtforms import IntegerField, SelectField, DateTimeLocalField
-from wtforms.validators import Optional, NumberRange, ValidationError
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField, IntegerField, SelectField
+from wtforms.fields import DateTimeLocalField
+from wtforms.validators import DataRequired, Email, Length, Optional, NumberRange
+
 
 class LoginForm(FlaskForm):
     email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=6, max=128)])
     submit = SubmitField("Entrar")
 
-from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 class EventForm(FlaskForm):
     title = StringField("Título", validators=[DataRequired(), Length(max=120)])
-    category = SelectField(
-        "Categoría",
-        choices=[("class", "Clase"), ("tournament", "Torneo"), ("open_play", "Juego libre")],
-        validators=[DataRequired()],
-    )
+
     pricing_mode = SelectField(
         "Modo",
-        choices=[("PACKAGE", "Paquete (evento completo)"), ("PER_OCCURRENCE", "Por sesión (elige sesiones)")],
+        choices=[
+            ("PACKAGE", "Paquete (todas las sesiones)"),
+            ("PER_OCCURRENCE", "Por sesión"),
+        ],
         validators=[DataRequired()],
     )
-    price = IntegerField("Precio (CLP)", validators=[DataRequired(), NumberRange(min=0)])
-    capacity = IntegerField("Cupo del evento (PACKAGE)", validators=[Optional(), NumberRange(min=1, max=9999)])
+
+    price = IntegerField("Precio base (CLP)", validators=[DataRequired(), NumberRange(min=0)])
+
+    capacity_default = IntegerField(
+        "Cupo por defecto",
+        validators=[Optional(), NumberRange(min=1, max=9999)],
+    )
+
     location_name = StringField("Lugar", validators=[DataRequired(), Length(max=120)])
+
     status = SelectField(
         "Estado",
         choices=[("draft", "Borrador"), ("published", "Publicado"), ("closed", "Cerrado")],
         validators=[DataRequired()],
     )
+
     submit = SubmitField("Guardar")
 
     def validate(self, extra_validators=None):
@@ -42,9 +46,10 @@ class EventForm(FlaskForm):
         if not rv:
             return False
 
-        if self.pricing_mode.data == "PACKAGE" and not self.capacity.data:
-            self.capacity.errors.append(
-                "El cupo del evento es obligatorio cuando el evento es de tipo paquete."
+        # Para PACKAGE exigimos cupo por defecto (si no, no puedes calcular disponibilidad).
+        if self.pricing_mode.data == "PACKAGE" and not self.capacity_default.data:
+            self.capacity_default.errors.append(
+                "El cupo por defecto es obligatorio para eventos tipo paquete."
             )
             return False
 
@@ -55,7 +60,15 @@ class OccurrenceForm(FlaskForm):
     start_dt = DateTimeLocalField("Inicio", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
     end_dt = DateTimeLocalField("Fin", format="%Y-%m-%dT%H:%M", validators=[DataRequired()])
 
-    capacity = IntegerField("Cupo (solo si PER_OCCURRENCE)", validators=[Optional(), NumberRange(min=1, max=9999)])
+    capacity_override = IntegerField(
+        "Cupo específico (opcional)",
+        validators=[Optional(), NumberRange(min=1, max=9999)],
+    )
+
+    price_override = IntegerField(
+        "Precio específico (opcional)",
+        validators=[Optional(), NumberRange(min=0)],
+    )
 
     submit = SubmitField("Guardar")
 

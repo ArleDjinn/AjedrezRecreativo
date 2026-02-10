@@ -12,12 +12,25 @@
 
     <label>Inicio</label>
     {{ form.start_dt(type="datetime-local") }}
+    {% for e in form.start_dt.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     <label>Fin</label>
     {{ form.end_dt(type="datetime-local") }}
+    {% for e in form.end_dt.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
-    <label>Cupo (solo si PER_OCCURRENCE)</label>
-    {{ form.capacity() }}
+    <label>
+      Cupo específico (opcional)
+      <small>(si lo dejas vacío, se usa el cupo por defecto del evento)</small>
+    </label>
+    {{ form.capacity_override() }}
+    {% for e in form.capacity_override.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+
+    <label>
+      Precio específico (opcional)
+      <small>(si lo dejas vacío, se usa el precio base del evento)</small>
+    </label>
+    {{ form.price_override() }}
+    {% for e in form.price_override.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
 
     {{ form.submit() }}
   </form>

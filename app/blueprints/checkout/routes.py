@@ -1,22 +1,13 @@
 import json
+from datetime import datetime, timedelta, timezone
+
 from flask import Blueprint, render_template, abort, request, redirect, url_for
 from app.extensions import db
 from app.models import Event, Purchase, PurchaseParticipant
-from datetime import datetime, timedelta, timezone
 
-def remaining_capacity(event) -> int:
-    if event.capacity is None:
-        return 0
-    used = (
-        db.session.query(PurchaseParticipant)
-        .join(Purchase, PurchaseParticipant.purchase_id == Purchase.id)
-        .filter(
-            Purchase.event_id == event.id,
-            Purchase.status.in_(["pending", "paid"]),
-        )
-        .count()
-    )
-    return max(event.capacity - used, 0)
+
+checkout_bp = Blueprint("checkout", __name__)
+
 
 def expire_old_pending(event) -> None:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=2)
@@ -31,33 +22,78 @@ def expire_old_pending(event) -> None:
     )
     db.session.commit()
 
-checkout_bp = Blueprint("checkout", __name__)
+
+def _pending_or_paid_participants_for_event(event_id: int) -> int:
+    # Reserva cupos con pending (hasta que expiren) y cuenta paid.
+    return (
+        db.session.query(PurchaseParticipant.id)
+        .join(Purchase, PurchaseParticipant.purchase_id == Purchase.id)
+        .filter(
+            Purchase.event_id == event_id,
+            Purchase.status.in_(["pending", "paid"]),
+        )
+        .count()
+    )
+
+
+def remaining_capacity(event: Event) -> int | None:
+    """
+    Para PACKAGE: el cupo real es por sesión.
+    En MVP, el cupo del pack es el mínimo cupo efectivo entre sesiones scheduled.
+    remaining = min_cap - used (used = participantes en pending/paid del evento)
+
+    Si no hay sesiones scheduled, devolvemos None (no bloqueamos por cupo aquí).
+    Si alguna sesión no tiene cupo (cap None), lo tratamos como ilimitado (None) y
+    entonces el pack queda ilimitado; PERO en tu admin estás exigiendo capacity_default
+    para PACKAGE, así que en la práctica cap debería existir.
+    """
+    scheduled = [oc for oc in (event.occurrences or []) if oc.status == "scheduled"]
+    if not scheduled:
+        return None
+
+    caps = []
+    for oc in scheduled:
+        cap = oc.effective_capacity()  # override o default del evento
+        if cap is None:
+            # cupo ilimitado en alguna sesión => pack ilimitado
+            return None
+        caps.append(int(cap))
+
+    cap_pack = min(caps) if caps else None
+    if cap_pack is None:
+        return None
+
+    used = _pending_or_paid_participants_for_event(event.id)
+    return max(cap_pack - used, 0)
+
 
 def compute_total_price(event: Event) -> int:
-    occurrences = sorted(event.occurrences, key=lambda o: o.start_dt)
+    # En este blueprint solo estamos manejando PACKAGE.
+    return int(event.price or 0)
 
-    if event.pricing_mode == "PACKAGE":
-        return int(event.price or 0)
-
-    return int((event.price or 0) * len(occurrences))
 
 @checkout_bp.get("/event/<int:event_id>")
 def checkout_event(event_id: int):
     event = Event.query.get(event_id)
-
     if event is None or event.status != "published":
         abort(404)
+
+    # Este checkout es solo para PACKAGE (como lo tenías).
     if event.pricing_mode != "PACKAGE":
         abort(400)
 
-    occurrences = sorted(event.occurrences, key=lambda o: o.start_dt)
-    total_price = compute_total_price(event)
-
     expire_old_pending(event)
 
+    occurrences = sorted(
+        [oc for oc in (event.occurrences or []) if oc.status == "scheduled"],
+        key=lambda o: o.start_dt,
+    )
+
+    total_price = compute_total_price(event)
+
     capacity_left = remaining_capacity(event)
-    if capacity_left <= 0:
-        abort(409)  # Conflict: no hay cupos
+    if capacity_left is not None and capacity_left <= 0:
+        abort(409)
 
     return render_template(
         "checkout/event_checkout.html",
@@ -65,14 +101,17 @@ def checkout_event(event_id: int):
         occurrences=occurrences,
         total_price=total_price,
         capacity_left=capacity_left,
+        error=None,
+        form=None,
     )
+
 
 @checkout_bp.post("/event/<int:event_id>")
 def checkout_event_post(event_id: int):
     event = Event.query.get(event_id)
-
     if event is None or event.status != "published":
         abort(404)
+
     if event.pricing_mode != "PACKAGE":
         abort(400)
 
@@ -80,18 +119,23 @@ def checkout_event_post(event_id: int):
     expire_old_pending(event)
     capacity_left = remaining_capacity(event)
 
-    if capacity_left <= 0:
-        occurrences = sorted(event.occurrences, key=lambda o: o.start_dt)
+    occurrences = sorted(
+        [oc for oc in (event.occurrences or []) if oc.status == "scheduled"],
+        key=lambda o: o.start_dt,
+    )
+
+    if capacity_left is not None and capacity_left <= 0:
         return render_template(
             "checkout/event_checkout.html",
             event=event,
             occurrences=occurrences,
-            total_price=0,
+            total_price=compute_total_price(event),
             capacity_left=capacity_left,
             error="No quedan cupos disponibles para este evento.",
+            form=None,
         ), 409
 
-    # 2) Buyer (siempre)
+    # 2) Buyer
     buyer_name = (request.form.get("buyer_name") or "").strip()
     buyer_email = (request.form.get("buyer_email") or "").strip()
     buyer_phone = (request.form.get("buyer_phone") or "").strip()
@@ -101,9 +145,7 @@ def checkout_event_post(event_id: int):
         participant_count = int(request.form.get("participant_count") or "1")
     except ValueError:
         participant_count = 1
-
-    if participant_count < 1:
-        participant_count = 1
+    participant_count = max(participant_count, 1)
 
     # 4) Lee participantes dinámicos
     participants = []
@@ -122,15 +164,13 @@ def checkout_event_post(event_id: int):
 
         participants.append({"name": pname, "age": page})
 
-    occurrences = sorted(event.occurrences, key=lambda o: o.start_dt)
-
     # 5) Validaciones
     if not buyer_name or not buyer_email or not buyer_phone or not participants:
         return render_template(
             "checkout/event_checkout.html",
             event=event,
             occurrences=occurrences,
-            total_price=compute_total_price(event) * max(participant_count, 1),
+            total_price=compute_total_price(event) * participant_count,
             capacity_left=capacity_left,
             error="Revisa los datos del comprador y de los participantes.",
             form={
@@ -142,7 +182,7 @@ def checkout_event_post(event_id: int):
             },
         ), 400
 
-    if participant_count > capacity_left:
+    if capacity_left is not None and participant_count > capacity_left:
         return render_template(
             "checkout/event_checkout.html",
             event=event,
@@ -159,11 +199,11 @@ def checkout_event_post(event_id: int):
             },
         ), 409
 
-    # 6) Precio: pack POR PARTICIPANTE (estándar industria)
-    unit_price = compute_total_price(event)  # pack por persona
+    # 6) Precio: pack POR PARTICIPANTE
+    unit_price = compute_total_price(event)
     total_price = unit_price * participant_count
 
-    # 7) Crear Purchase + participants (1 commit)
+    # 7) Crear Purchase + participants
     purchase = Purchase(
         event_id=event.id,
         buyer_name=buyer_name,
@@ -174,18 +214,21 @@ def checkout_event_post(event_id: int):
     )
 
     db.session.add(purchase)
-    db.session.flush()  # para obtener purchase.id sin commit
+    db.session.flush()
 
     for p in participants:
-        db.session.add(PurchaseParticipant(
-            purchase_id=purchase.id,
-            name=p["name"],
-            age=p["age"],
-        ))
+        db.session.add(
+            PurchaseParticipant(
+                purchase_id=purchase.id,
+                name=p["name"],
+                age=p["age"],
+            )
+        )
 
     db.session.commit()
 
     return redirect(url_for("payments.webpay_start", purchase_id=purchase.id))
+
 
 @checkout_bp.get("/success/<int:purchase_id>")
 def checkout_success(purchase_id: int):

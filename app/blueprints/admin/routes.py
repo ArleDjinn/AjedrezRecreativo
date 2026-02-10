@@ -1,17 +1,21 @@
+# app/blueprints/admin/routes.py
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from app.extensions import db
-from app.models import User
-from .forms import LoginForm
 from sqlalchemy import func
-from app.models import Event, Occurrence, Purchase, PurchaseParticipant
+
+from app.extensions import db
+from app.models import User, Event, Occurrence, Purchase, PurchaseParticipant
+from .forms import LoginForm, EventForm, OccurrenceForm
 
 admin_bp = Blueprint("admin", __name__, template_folder="templates")
+
 
 @admin_bp.get("/")
 @login_required
 def admin_home():
     return render_template("admin/home.html")
+
 
 @admin_bp.route("/login", methods=["GET", "POST"])
 def login():
@@ -35,6 +39,7 @@ def login():
 
     return render_template("admin/login.html", form=form)
 
+
 @admin_bp.post("/logout")
 @login_required
 def logout():
@@ -42,7 +47,6 @@ def logout():
     flash("Sesión cerrada.", "info")
     return redirect(url_for("admin.login"))
 
-from .forms import EventForm, OccurrenceForm
 
 @admin_bp.get("/events")
 @login_required
@@ -50,18 +54,17 @@ def events_list():
     events = Event.query.order_by(Event.created_at.desc()).all()
     return render_template("admin/events_list.html", events=events)
 
+
 @admin_bp.route("/events/new", methods=["GET", "POST"])
 @login_required
 def events_new():
     form = EventForm()
     if form.validate_on_submit():
-        capacity_value = form.capacity.data if form.pricing_mode.data == "PACKAGE" else None
         ev = Event(
             title=form.title.data.strip(),
-            category=form.category.data,
             pricing_mode=form.pricing_mode.data,
             price=form.price.data,
-            capacity=capacity_value,
+            capacity_default=form.capacity_default.data,
             location_name=form.location_name.data.strip(),
             status=form.status.data,
         )
@@ -69,7 +72,9 @@ def events_new():
         db.session.commit()
         flash("Evento creado.", "success")
         return redirect(url_for("admin.event_detail", event_id=ev.id))
+
     return render_template("admin/event_form.html", form=form, mode="new")
+
 
 @admin_bp.route("/events/<int:event_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -79,10 +84,9 @@ def events_edit(event_id):
 
     if form.validate_on_submit():
         ev.title = form.title.data.strip()
-        ev.category = form.category.data
         ev.pricing_mode = form.pricing_mode.data
         ev.price = form.price.data
-        ev.capacity = form.capacity.data if form.pricing_mode.data == "PACKAGE" else None
+        ev.capacity_default = form.capacity_default.data
         ev.location_name = form.location_name.data.strip()
         ev.status = form.status.data
 
@@ -92,6 +96,7 @@ def events_edit(event_id):
 
     return render_template("admin/event_form.html", form=form, mode="edit", event=ev)
 
+
 def _paid_participants_count_for_event(event_id: int) -> int:
     # cupo por participante: suma de participants en compras pagadas del evento
     return (
@@ -100,6 +105,7 @@ def _paid_participants_count_for_event(event_id: int) -> int:
         .filter(Purchase.event_id == event_id, Purchase.status == "paid")
         .scalar()
     ) or 0
+
 
 def _paid_participants_count_for_occurrence(occurrence_id: int) -> int:
     # cuenta participantes de compras pagadas que incluyen esa occurrence
@@ -111,29 +117,25 @@ def _paid_participants_count_for_occurrence(occurrence_id: int) -> int:
         .scalar()
     ) or 0
 
+
 @admin_bp.get("/events/<int:event_id>")
 @login_required
 def event_detail(event_id):
     ev = Event.query.get_or_404(event_id)
 
     paid_participants = _paid_participants_count_for_event(ev.id)
-    remaining_event = None
-    if ev.capacity is not None:
-        remaining_event = max(ev.capacity - paid_participants, 0)
 
-    # occurrences ordenadas (ya lo defines en relationship)
-    occs = ev.occurrences
+    # En el modelo optimizado, el cupo efectivo es por occurrence (override o default del evento).
+    # Aun así, por compatibilidad de UI, mostramos el "cupo base" del evento y su restante.
+    remaining_event = None
+    if ev.capacity_default is not None:
+        remaining_event = max(ev.capacity_default - paid_participants, 0)
 
     occ_stats = []
-    for oc in occs:
-        if ev.pricing_mode == "PER_OCCURRENCE":
-            oc_capacity = oc.capacity or 0
-            oc_paid = _paid_participants_count_for_occurrence(oc.id)
-            oc_remaining = max(oc_capacity - oc_paid, 0)
-        else:
-            oc_capacity = None
-            oc_paid = None
-            oc_remaining = None
+    for oc in ev.occurrences:
+        oc_paid = _paid_participants_count_for_occurrence(oc.id)
+        oc_capacity = oc.effective_capacity()
+        oc_remaining = None if oc_capacity is None else max(oc_capacity - oc_paid, 0)
         occ_stats.append((oc, oc_capacity, oc_paid, oc_remaining))
 
     return render_template(
@@ -144,6 +146,7 @@ def event_detail(event_id):
         occ_stats=occ_stats,
     )
 
+
 @admin_bp.route("/events/<int:event_id>/occurrences/new", methods=["GET", "POST"])
 @login_required
 def occurrence_new(event_id):
@@ -151,26 +154,12 @@ def occurrence_new(event_id):
     form = OccurrenceForm()
 
     if form.validate_on_submit():
-        # Regla de negocio:
-        # - PER_OCCURRENCE → capacity OBLIGATORIA
-        # - PACKAGE → capacity DEBE ser None
-        if ev.pricing_mode == "PER_OCCURRENCE":
-            if not form.capacity.data:
-                form.capacity.errors.append(
-                    "El cupo es obligatorio cuando el evento es 'Por sesión'."
-                )
-                return render_template(
-                    "admin/occurrence_form.html", form=form, event=ev
-                )
-            capacity = form.capacity.data
-        else:
-            capacity = None
-
         oc = Occurrence(
             event_id=ev.id,
             start_dt=form.start_dt.data,
             end_dt=form.end_dt.data,
-            capacity=capacity,
+            capacity_override=form.capacity_override.data,
+            price_override=form.price_override.data,
             status="scheduled",
         )
         db.session.add(oc)
@@ -180,6 +169,7 @@ def occurrence_new(event_id):
         return redirect(url_for("admin.event_detail", event_id=ev.id))
 
     return render_template("admin/occurrence_form.html", form=form, event=ev)
+
 
 @admin_bp.post("/occurrences/<int:occurrence_id>/cancel")
 @login_required
