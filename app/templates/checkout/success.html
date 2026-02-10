@@ -23,9 +23,9 @@
   <h3>Participantes ({{ purchase.participants|length }})</h3>
 
   {% if purchase.participants %}
-    <div style="display: grid; gap: 0.75rem;">
+    <div class="participants-grid">
       {% for p in purchase.participants %}
-        <div style="border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem;">
+        <div class="participant-card">
           <strong>Participante #{{ loop.index }}</strong><br>
           Nombre: {{ p.name }}<br>
           Edad: {{ p.age }}
@@ -36,7 +36,7 @@
     <p>No se registraron participantes.</p>
   {% endif %}
 
-  <p style="margin-top: 1rem;">
+  <p class="stack">
     En el siguiente paso integraremos el pago.
   </p>
 

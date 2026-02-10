@@ -15,43 +15,57 @@
   <form method="post">
     {{ form.hidden_tag() }}
 
-    <label>Título</label>
-    {{ form.title() }}
-    {% for e in form.title.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>Título</label>
+      {{ form.title() }}
+      {% for e in form.title.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>Modo de cobro</label>
-    {{ form.pricing_mode() }}
-    {% for e in form.pricing_mode.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>Modo de cobro</label>
+      {{ form.pricing_mode() }}
+      {% for e in form.pricing_mode.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>
-      Precio base (CLP)
-      <small>
-        {% if form.pricing_mode.data == "PER_OCCURRENCE" %}
-          (por sesión; se puede sobreescribir por sesión)
-        {% else %}
-          (paquete completo)
-        {% endif %}
-      </small>
-    </label>
-    {{ form.price() }}
-    {% for e in form.price.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>
+        Precio base (CLP)
+        <small>
+          {% if form.pricing_mode.data == "PER_OCCURRENCE" %}
+            (por sesión; se puede sobreescribir por sesión)
+          {% else %}
+            (paquete completo)
+          {% endif %}
+        </small>
+      </label>
+      {{ form.price() }}
+      {% for e in form.price.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>
-      Cupo por defecto
-      <small>(se aplica a cada sesión; puede tener override por sesión)</small>
-    </label>
-    {{ form.capacity_default() }}
-    {% for e in form.capacity_default.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>
+        Cupo por defecto
+        <small>(se aplica a cada sesión; puede tener override por sesión)</small>
+      </label>
+      {{ form.capacity_default() }}
+      {% for e in form.capacity_default.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>Lugar</label>
-    {{ form.location_name() }}
-    {% for e in form.location_name.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>Lugar</label>
+      {{ form.location_name() }}
+      {% for e in form.location_name.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>Estado</label>
-    {{ form.status() }}
-    {% for e in form.status.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>Estado</label>
+      {{ form.status() }}
+      {% for e in form.status.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    {{ form.submit() }}
+    <div class="form-actions">
+      {{ form.submit() }}
+    </div>
   </form>
 
   <p>

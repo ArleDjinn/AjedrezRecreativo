@@ -9,7 +9,7 @@
   <p><strong>Lugar:</strong> {{ event.location_name }}</p>
 
   <h4>Fechas incluidas</h4>
-  <ul>
+  <ul class="simple-list">
     {% for occ in occurrences %}
       <li>
         {{ occ.start_dt.strftime("%d-%m-%Y") }}
@@ -26,21 +26,21 @@
   {% endif %}
 
   {% if error %}
-    <p style="color: red;"><strong>{{ error }}</strong></p>
+    <p class="text-danger"><strong>{{ error }}</strong></p>
   {% endif %}
 
   <form method="post" action="{{ url_for('checkout.checkout_event_post', event_id=event.id) }}">
     <h4>Datos del comprador</h4>
-    <div>
-      <label>Nombre</label><br>
+    <div class="form-field">
+      <label>Nombre</label>
       <input name="buyer_name" value="{{ (form.get('buyer_name') if form else '') }}" required>
     </div>
-    <div>
-      <label>Email</label><br>
+    <div class="form-field">
+      <label>Email</label>
       <input type="email" name="buyer_email" value="{{ (form.get('buyer_email') if form else '') }}" required>
     </div>
-    <div>
-      <label>Teléfono</label><br>
+    <div class="form-field">
+      <label>Teléfono</label>
       <input name="buyer_phone" value="{{ (form.get('buyer_phone') if form else '') }}" required>
     </div>
 
@@ -48,8 +48,8 @@
 
     <h4>Participantes</h4>
 
-    <div>
-      <label>Cantidad de participantes</label><br>
+    <div class="form-field">
+      <label>Cantidad de participantes</label>
       {% set pc = (form.get('participant_count') if form else '1') %}
       <select id="participant-count" name="participant_count">
         {% for n in range(1, 11) %}
@@ -58,9 +58,9 @@
       </select>
     </div>
 
-    <div id="participants-container" style="margin-top: 1rem;"></div>
+    <div id="participants-container" class="stack"></div>
 
-    <div style="margin-top: 1rem;">
+    <div class="form-actions">
       <button type="submit" {% if capacity_left is not none and capacity_left <= 0 %}disabled{% endif %}>
         Confirmar compra
       </button>
