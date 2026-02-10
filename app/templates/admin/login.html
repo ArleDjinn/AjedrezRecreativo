@@ -7,12 +7,18 @@
   <form method="post">
     {{ form.hidden_tag() }}
 
-    <label>Email</label>
-    {{ form.email() }}
+    <div class="form-field">
+      <label>Email</label>
+      {{ form.email() }}
+    </div>
 
-    <label>Password</label>
-    {{ form.password() }}
+    <div class="form-field">
+      <label>Password</label>
+      {{ form.password() }}
+    </div>
 
-    {{ form.submit() }}
+    <div class="form-actions">
+      {{ form.submit() }}
+    </div>
   </form>
 {% endblock %}

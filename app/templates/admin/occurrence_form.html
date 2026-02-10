@@ -10,28 +10,38 @@
   <form method="post">
     {{ form.hidden_tag() }}
 
-    <label>Inicio</label>
-    {{ form.start_dt(type="datetime-local") }}
-    {% for e in form.start_dt.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>Inicio</label>
+      {{ form.start_dt(type="datetime-local") }}
+      {% for e in form.start_dt.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>Fin</label>
-    {{ form.end_dt(type="datetime-local") }}
-    {% for e in form.end_dt.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>Fin</label>
+      {{ form.end_dt(type="datetime-local") }}
+      {% for e in form.end_dt.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>
-      Cupo específico (opcional)
-      <small>(si lo dejas vacío, se usa el cupo por defecto del evento)</small>
-    </label>
-    {{ form.capacity_override() }}
-    {% for e in form.capacity_override.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>
+        Cupo específico (opcional)
+        <small>(si lo dejas vacío, se usa el cupo por defecto del evento)</small>
+      </label>
+      {{ form.capacity_override() }}
+      {% for e in form.capacity_override.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    <label>
-      Precio específico (opcional)
-      <small>(si lo dejas vacío, se usa el precio base del evento)</small>
-    </label>
-    {{ form.price_override() }}
-    {% for e in form.price_override.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    <div class="form-field">
+      <label>
+        Precio específico (opcional)
+        <small>(si lo dejas vacío, se usa el precio base del evento)</small>
+      </label>
+      {{ form.price_override() }}
+      {% for e in form.price_override.errors %}<div class="flash danger">{{ e }}</div>{% endfor %}
+    </div>
 
-    {{ form.submit() }}
+    <div class="form-actions">
+      {{ form.submit() }}
+    </div>
   </form>
 {% endblock %}

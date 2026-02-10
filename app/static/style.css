@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: system-ui, sans-serif;
   max-width: 900px;
@@ -9,15 +13,62 @@ header, footer {
   margin-bottom: 1.5rem;
 }
 
-ul {
+a {
+  color: #1a5b9e;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+main > h2 {
+  margin-top: 0;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.flash {
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+}
+
+.flash.danger {
+  background: #ffe6e6;
+  border: 1px solid #f5a3a3;
+}
+
+.flash.warning {
+  background: #fff4d6;
+  border: 1px solid #f2c36b;
+}
+
+.flash.success {
+  background: #e7f6ec;
+  border: 1px solid #8ad0a6;
+}
+
+.flash.info {
+  background: #e6f1ff;
+  border: 1px solid #9cc0f2;
+}
+
+.simple-list {
   list-style: none;
+  margin: 0;
   padding: 0;
 }
 
-li {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  margin-bottom: 1rem;
+.simple-list li {
+  border-bottom: 1px solid #eee;
+  padding: 0.5rem 0;
+}
+
+.simple-list li:last-child {
+  border-bottom: none;
 }
 
 .event-card {
@@ -25,4 +76,56 @@ li {
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 6px;
+}
+
+.events {
+  display: grid;
+  gap: 1rem;
+}
+
+.table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.table thead {
+  background: #f5f5f5;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.form-actions {
+  margin-top: 1rem;
+}
+
+.text-danger {
+  color: #b00020;
+}
+
+.participants-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.participant-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.stack {
+  margin-top: 1rem;
 }

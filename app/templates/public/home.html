@@ -12,8 +12,12 @@
           <h3>{{ event.title }}</h3>
 
           <p>
-            <strong>Tipo:</strong>
-            {{ event.category | replace("_", " ") | capitalize }}
+            <strong>Modalidad:</strong>
+            {% if event.pricing_mode == "PACKAGE" %}
+              Paquete completo
+            {% else %}
+              Por sesión
+            {% endif %}
           </p>
 
           <p>

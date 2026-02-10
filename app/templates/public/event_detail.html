@@ -6,31 +6,34 @@
   <h2>{{ event.title }}</h2>
 
   <p><strong>Lugar:</strong> {{ event.location_name }}</p>
-  <p><strong>Cupos:</strong> {{ event.capacity if event.capacity is not none else "—" }}</p>
+  <p>
+    <strong>Cupo por sesión:</strong>
+    {{ event.capacity_default if event.capacity_default is not none else "—" }}
+  </p>
 
-    <h3>Fechas incluidas</h3>
-    {% if occurrences %}
-      <ul>
-        {% for occ in occurrences %}
-          <li>
-            {{ occ.start_dt.strftime("%d-%m-%Y") }}
-            ·
-            {{ occ.start_dt.strftime("%H:%M") }}
-            –
-            {{ occ.end_dt.strftime("%H:%M") }}
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>Fechas por confirmar.</p>
-    {% endif %}
+  <h3>Fechas incluidas</h3>
+  {% if occurrences %}
+    <ul class="simple-list">
+      {% for occ in occurrences %}
+        <li>
+          {{ occ.start_dt.strftime("%d-%m-%Y") }}
+          ·
+          {{ occ.start_dt.strftime("%H:%M") }}
+          –
+          {{ occ.end_dt.strftime("%H:%M") }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Fechas por confirmar.</p>
+  {% endif %}
 
 
   <h3>Precio</h3>
   {% if event.pricing_mode == "PACKAGE" %}
     <p><strong>${{ event.price }}</strong></p>
   {% else %}
-    <p><strong>${{ event.price * (event.occurrences|length) }}</strong> (pack)</p>
+    <p><strong>${{ event.price * (event.occurrences|length) }}</strong> (total)</p>
   {% endif %}
 
   <p>

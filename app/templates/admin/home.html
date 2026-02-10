@@ -6,10 +6,10 @@
 
   <p>Sesión activa: <strong>{{ current_user.email }}</strong></p>
 
-    <ul>
-        <li><a href="{{ url_for('admin.admin_home') }}">Inicio</a></li>
-        <li><a href="{{ url_for('admin.events_list') }}">Eventos</a></li>
-        <!-- después: eventos, compras -->
-    </ul>
+  <ul class="simple-list">
+    <li><a href="{{ url_for('admin.admin_home') }}">Inicio</a></li>
+    <li><a href="{{ url_for('admin.events_list') }}">Eventos</a></li>
+    <!-- después: eventos, compras -->
+  </ul>
 
 {% endblock %}
