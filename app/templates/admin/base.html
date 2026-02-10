@@ -1,40 +1,43 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <title>{% block title %}Admin · Ajedrez Recreativo{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
 <body>
-
   <header>
-    <h1>Admin · Ajedrez Recreativo</h1>
+    <div class="container header-inner">
+      <div class="brand">
+        <span>Admin · Ajedrez Recreativo</span>
+        {% if current_user.is_authenticated %}
+          <span class="badge">{{ current_user.email }}</span>
+        {% endif %}
+      </div>
 
-    {% if current_user.is_authenticated %}
-      <nav>
-        <form method="post" action="{{ url_for('admin.logout') }}" style="display:inline">
-          <button type="submit">Salir</button>
-        </form>
-      </nav>
-    {% endif %}
+      {% if current_user.is_authenticated %}
+        <nav class="actions">
+          <a class="btn" href="{{ url_for('admin.events_list') }}">Eventos</a>
+          <form method="post" action="{{ url_for('admin.logout') }}" style="margin:0">
+            <button type="submit" class="btn">Salir</button>
+          </form>
+        </nav>
+      {% endif %}
+    </div>
   </header>
 
   <main>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, msg in messages %}
-          <div class="flash {{ category }}">{{ msg }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="flash {{ category }}">{{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-    {% block content %}{% endblock %}
+      <div class="card">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
   </main>
 
   <footer>
-    <small>Admin · Ajedrez Recreativo</small>
+    <div class="container">
+      <small>Admin · Ajedrez Recreativo</small>
+    </div>
   </footer>
-
 </body>
-</html>
