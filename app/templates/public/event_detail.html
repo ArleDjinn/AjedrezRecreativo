@@ -3,42 +3,62 @@
 {% block title %}{{ event.title }} – Ajedrez Recreativo{% endblock %}
 
 {% block content %}
-  <h2>{{ event.title }}</h2>
+  <div class="card">
+    <p><a href="{{ url_for('public.home') }}">← Volver</a></p>
 
-  <p><strong>Lugar:</strong> {{ event.location_name }}</p>
-  <p>
-    <strong>Cupo por sesión:</strong>
-    {{ event.capacity_default if event.capacity_default is not none else "—" }}
-  </p>
+    <h2>{{ event.title }}</h2>
 
-  <h3>Fechas incluidas</h3>
-  {% if occurrences %}
-    <ul class="simple-list">
-      {% for occ in occurrences %}
-        <li>
-          {{ occ.start_dt.strftime("%d-%m-%Y") }}
-          ·
-          {{ occ.start_dt.strftime("%H:%M") }}
-          –
-          {{ occ.end_dt.strftime("%H:%M") }}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Fechas por confirmar.</p>
-  {% endif %}
+    <p><strong>Lugar:</strong> {{ event.location_name }}</p>
 
+    <p>
+      <strong>Cupo por defecto:</strong>
+      {{ event.capacity_default if event.capacity_default is not none else "—" }}
+      <small>(puede variar por sesión)</small>
+    </p>
 
-  <h3>Precio</h3>
-  {% if event.pricing_mode == "PACKAGE" %}
-    <p><strong>${{ event.price }}</strong></p>
-  {% else %}
-    <p><strong>${{ event.price * (event.occurrences|length) }}</strong> (total)</p>
-  {% endif %}
+    <hr>
 
-  <p>
-    <a href="{{ url_for('checkout.checkout_event', event_id=event.id) }}">
-        Inscripción
-    </a>
-  </p>
+    <h3>Fechas</h3>
+    {% if occurrences %}
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Horario</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for occ in occurrences %}
+            <tr>
+              <td>{{ occ.start_dt.strftime("%d-%m-%Y") }}</td>
+              <td>{{ occ.start_dt.strftime("%H:%M") }} – {{ occ.end_dt.strftime("%H:%M") }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Fechas por confirmar.</p>
+    {% endif %}
+
+    <hr>
+
+    <h3>Precio</h3>
+    {% if event.pricing_mode == "PACKAGE" %}
+      <p><strong>${{ event.price }}</strong> <small>(por participante, pack completo)</small></p>
+    {% else %}
+      <p><strong>${{ event.price }}</strong> <small>(por sesión, por participante)</small></p>
+    {% endif %}
+
+    <div class="actions" style="margin-top: 14px;">
+      {% if event.pricing_mode == "PACKAGE" %}
+        <a class="btn btn-primary" href="{{ url_for('checkout.checkout_event', event_id=event.id) }}">
+          Inscribirse
+        </a>
+      {% else %}
+        <button class="btn" disabled>
+          Inscripción por sesión (próximamente)
+        </button>
+      {% endif %}
+    </div>
+  </div>
 {% endblock %}

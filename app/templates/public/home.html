@@ -3,51 +3,58 @@
 {% block title %}Inicio – Ajedrez Recreativo{% endblock %}
 
 {% block content %}
-  <h2>Próximos eventos</h2>
+  <div class="card">
+    <h2>Próximos eventos</h2>
+    <p>Inscripciones abiertas a eventos publicados.</p>
+  </div>
 
   {% if events %}
-    <div class="events">
-      {% for event in events %}
-        <div class="event-card">
-          <h3>{{ event.title }}</h3>
+    {% for event in events %}
+      <div class="card">
+        <div class="row">
+          <div class="col">
+            <h2 style="margin-bottom:6px;">{{ event.title }}</h2>
+            <p>
+              <span class="badge">
+                {% if event.pricing_mode == "PACKAGE" %}
+                  Paquete
+                {% else %}
+                  Por sesión
+                {% endif %}
+              </span>
+              <span class="badge">{{ event.status }}</span>
+            </p>
 
-          <p>
-            <strong>Modalidad:</strong>
-            {% if event.pricing_mode == "PACKAGE" %}
-              Paquete completo
-            {% else %}
-              Por sesión
-            {% endif %}
-          </p>
+            <p><strong>Lugar:</strong> {{ event.location_name }}</p>
 
-          <p>
-            <strong>Duración:</strong>
-            {{ event.occurrences | length }} sesiones
-          </p>
+            <p>
+              <strong>Sesiones:</strong>
+              {{ event.occurrences|length }}
+            </p>
 
-          <p>
-            <strong>Lugar:</strong>
-            {{ event.location_name }}
-          </p>
+            <p>
+              <strong>Precio:</strong>
+              {% if event.pricing_mode == "PACKAGE" %}
+                ${{ event.price }} <small>(por participante)</small>
+              {% else %}
+                ${{ event.price }} <small>(por sesión, por participante)</small>
+              {% endif %}
+            </p>
+          </div>
 
-          <p>
-            <strong>Precio:</strong>
-            {% if event.pricing_mode == "PACKAGE" %}
-              ${{ event.price }}
-            {% else %}
-              ${{ event.price * (event.occurrences | length) }}
-            {% endif %}
-          </p>
-
-          <p>
-            <a href="{{ url_for('public.event_detail', event_id=event.id) }}">
-              Ver detalle / Inscripción
-            </a>
-          </p>
+          <div class="col" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+            <div class="actions">
+              <a class="btn btn-primary" href="{{ url_for('public.event_detail', event_id=event.id) }}">
+                Ver detalle
+              </a>
+            </div>
+          </div>
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   {% else %}
-    <p>No hay eventos disponibles en este momento.</p>
+    <div class="card">
+      <p>No hay eventos disponibles en este momento.</p>
+    </div>
   {% endif %}
 {% endblock %}
